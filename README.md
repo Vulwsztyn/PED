@@ -1,6 +1,14 @@
-# PED Project
+# Checkpoint 1
 
-## Getting Posts
+## Pobieranie danych
+
+Opis pobierania danych skopiowany z brancha master znajduje się poniżej
+
+## Tworzenie artybutów z postów tekstowych 
+
+Cały kod dostępny jest w [notebooku.](https://kokes.github.io/nbviewer.js/viewer.html#aHR0cHM6Ly9naXRodWIuY29tL1Z1bHdzenR5bi9QRUQvYmxvYi9jaGVja3BvaW50XzEvbm90ZWJvb2tzL3RleHQvZ2VuZXJhdGVfYXR0cmlidXRlcy5pcHluYg==)
+
+### Getting Posts
 It's all already done, but if you'd like to use our scripts to get other posts here is how to do it:
 1. Go to https://www.reddit.com/prefs/apps/
 2. Create app: give it any name, choose script, set redirect uri to http://localhost:8080, you shoudl see something like this:
