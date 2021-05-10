@@ -21,8 +21,58 @@ EXCLUDED_COLUMNS = ['id', 'score', 'comms_num']
 #             indices.append(test.columns.get_loc(i))
 #     return indices
 
+def analyze(attributes, cls, score_or_comms_num='score', image_or_text='text'):
+    if image_or_text not in ['image', 'text']:
+        raise AttributeError
+    if score_or_comms_num not in ['score', 'comms_num']:
+        raise AttributeError
 
-def nasza_pienkna_funkcja(image_or_text='image', all_or_pruned='pruned', mlp_or_rf='mpl', score_or_comms_num='score',
+    train, test = train_test_split(attributes, test_size=0.2)
+
+    exclude = lambda x: x[x.columns.difference(EXCLUDED_COLUMNS)]
+
+    train_without_exculded = exclude(train)
+    test_without_excluded = exclude(test)
+    attributes_without_excluded = exclude(attributes)
+
+    cls.fit(train_without_exculded, train[score_or_comms_num])
+    y_pred = cls.predict(test_without_excluded)
+
+    mse = mean_squared_error(y_pred, test[score_or_comms_num])
+    rmse = np.sqrt(mse)
+
+    pca = PCA(n_components=2)
+    pca.fit(attributes_without_excluded)
+    components = pca.transform(attributes_without_excluded)
+
+    print(components.T)
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    ax.scatter(components.T[0], components.T[1], attributes[score_or_comms_num])
+    feature_names = np.array([])
+    if image_or_text == 'image':
+        feature_names = np.array([
+            x if not x.startswith('class') else 'p_' + imagenet_labels.imagenet_labels(int(x[x.find('_') + 1:]))[:11]
+            for x in attributes.columns[:-1]])
+    else:
+        feature_names = np.array([x.replace('body', 'b').replace('title', "t") for x in attributes.columns[:-1]])
+
+    explainer = lime.lime_tabular.LimeTabularExplainer(train_without_exculded.to_numpy(),
+                                                       feature_names=feature_names,
+                                                       class_names=[score_or_comms_num],
+                                                       categorical_features=[],
+                                                       verbose=True,
+                                                       mode='regression')
+
+    i = 1235
+    exp = explainer.explain_instance(test_without_excluded.to_numpy()[i], cls.predict,
+                                     num_features=30)  # TODO: num features
+    # print(test.to_numpy()[i][-1])
+    return rmse, exp, cls
+
+
+
+def nasza_pienkna_funkcja(image_or_text='image', all_or_pruned='pruned', mlp_or_rf='mlp', score_or_comms_num='score',
                           unchanged_or_bracketed='unchanged'):
     if image_or_text not in ['image', 'text']:
         raise AttributeError
