@@ -21,7 +21,7 @@ EXCLUDED_COLUMNS = ['id', 'score', 'comms_num']
 #             indices.append(test.columns.get_loc(i))
 #     return indices
 
-def analyze(attributes, cls, score_or_comms_num='score', image_or_text='text'):
+def analyze(attributes, cls, score_or_comms_num='score', image_or_text='text', reg_or_class='reg'):
     if image_or_text not in ['image', 'text']:
         raise AttributeError
     if score_or_comms_num not in ['score', 'comms_num']:
@@ -36,19 +36,34 @@ def analyze(attributes, cls, score_or_comms_num='score', image_or_text='text'):
     attributes_without_excluded = exclude(attributes)
 
     cls.fit(train_without_exculded, train[score_or_comms_num])
-    y_pred = cls.predict(test_without_excluded)
+    result = None
+    if reg_or_class == 'class':
+        result = cls.score(test_without_excluded, test[score_or_comms_num])
+    else:
+        y_pred = cls.predict(test_without_excluded)
 
-    mse = mean_squared_error(y_pred, test[score_or_comms_num])
-    rmse = np.sqrt(mse)
+        mse = mean_squared_error(y_pred, test[score_or_comms_num])
+        result = np.sqrt(mse)
 
-    pca = PCA(n_components=2)
-    pca.fit(attributes_without_excluded)
-    components = pca.transform(attributes_without_excluded)
+    if reg_or_class == 'class':
+        pca = PCA(n_components=2)
+        pca.fit(attributes_without_excluded)
+        components = pca.transform(attributes_without_excluded)
 
-    print(components.T)
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
-    ax.scatter(components.T[0], components.T[1], attributes[score_or_comms_num])
+        fig = plt.figure()
+        ax = fig.add_subplot()
+        for color, i, target_name in zip(['Red', 'Green'], [False, True], ['Unpopular', 'Popular']):
+            ax.scatter(components[attributes[score_or_comms_num] == i, 0], components[attributes[score_or_comms_num] == i, 1], color=color, alpha=.3,
+                        label=target_name)
+    else:
+        pca = PCA(n_components=2)
+        pca.fit(attributes_without_excluded)
+        components = pca.transform(attributes_without_excluded)
+
+        print(components.T)
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.scatter(components.T[0], components.T[1], attributes[score_or_comms_num])
     feature_names = np.array([])
     if image_or_text == 'image':
         feature_names = np.array([
@@ -68,7 +83,7 @@ def analyze(attributes, cls, score_or_comms_num='score', image_or_text='text'):
     exp = explainer.explain_instance(test_without_excluded.to_numpy()[i], cls.predict,
                                      num_features=30)  # TODO: num features
     # print(test.to_numpy()[i][-1])
-    return rmse, exp, cls
+    return result, exp, cls
 
 
 
