@@ -72,16 +72,28 @@ def analyze(attributes, cls, score_or_comms_num='score', image_or_text='text', r
     else:
         feature_names = np.array([x.replace('body', 'b').replace('title', "t") for x in attributes.columns[:-1]])
 
-    explainer = lime.lime_tabular.LimeTabularExplainer(train_without_exculded.to_numpy(),
-                                                       feature_names=feature_names,
-                                                       class_names=[score_or_comms_num],
-                                                       categorical_features=[],
-                                                       verbose=True,
-                                                       mode='regression')
+    if reg_or_class == 'reg':
+        explainer = lime.lime_tabular.LimeTabularExplainer(train_without_exculded.to_numpy(),
+                                                           feature_names=feature_names,
+                                                           class_names=[score_or_comms_num],
+                                                           categorical_features=[],
+                                                           verbose=True,
+                                                           mode='regression')
+        i = 1235
+        exp = explainer.explain_instance(test_without_excluded.to_numpy()[i], cls.predict,
+                                         num_features=50)  # TODO: num features
+    else:
+        explainer = lime.lime_tabular.LimeTabularExplainer(train_without_exculded.to_numpy(),
+                                                           feature_names=feature_names,
+                                                           class_names=[score_or_comms_num],
+                                                           categorical_features=[],
+                                                           verbose=True,
+                                                           mode='classification')
+        i = 1235
+        exp = explainer.explain_instance(test_without_excluded.to_numpy()[i], cls.predict_proba,
+                                         num_features=50)  # TODO: num features
 
-    i = 1235
-    exp = explainer.explain_instance(test_without_excluded.to_numpy()[i], cls.predict,
-                                     num_features=30)  # TODO: num features
+
     # print(test.to_numpy()[i][-1])
     return result, exp, cls
 
