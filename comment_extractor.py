@@ -10,15 +10,15 @@ import pandas
 import pickle
 df = pandas.read_csv('data/reddit_wsb.csv')
 
-df = df.sort_values(by=['comms_num'], ascending=False)
+df = df.sort_values(by=['comms_num'], ascending=True)
 
-print(df['id'])
-plt.hist(df['comms_num'], bins=20)
-plt.ylabel('Count')
-plt.yscale('log')
-plt.xlabel('Data')
-
-plt.show()
+# print(df['id'])
+# plt.hist(df['comms_num'], bins=20)
+# plt.ylabel('Count')
+# plt.yscale('log')
+# plt.xlabel('Data')
+#
+# plt.show()
 
 load_dotenv()
 reddit = praw.Reddit(
@@ -32,30 +32,36 @@ print(reddit.user.me())
 
 
 should_end = False
-how_many = 0
 start = time.time()
-print(df['comms_num'].iloc[0])
-print(df['comms_num'].iloc[500])
-print(df['comms_num'].iloc[1000])
-ids = df['id'][1000:1010]
+# print(df['comms_num'].iloc[0])
+# print(df['comms_num'].iloc[500])
+# print(df['comms_num'].iloc[1000])
+ids = df['id'][:]
 
 top_level_only = False
-comments = {}
+# comments = {"post_id": 0}
+comments = pickle.load(open("./pickle/comments_all.pkl", "rb"))
+current_id = comments["post_id"]
+j=0
 for i in ids:
+    print(str(j) + '/' + str(len(ids)))
+    if j < current_id:
+        continue
     submission = reddit.submission(i)
     submission.comment_sort = "old"
     print(submission.permalink)
     try:
         submission.comments.replace_more(
             limit=None)
+        comments[i] = []
+        for _, comment in enumerate(submission.comments):
+            if isinstance(comment, MoreComments):
+                continue
+            comments[i].append(comment)
     except:
         print("wina reddita")
 
-    comments[i] = []
-    for j, comment in enumerate(submission.comments):
-        if isinstance(comment, MoreComments):
-            continue
-        comments[i].append(comment)
-        print(j)
 
-    pickle.dump(comments, open( "./pickle/comments_circa_397.pkl", "wb" ))
+    comments["post_id"] = j
+    pickle.dump(comments, open( "./pickle/comments_all.pkl", "wb" ))
+    j+=1
