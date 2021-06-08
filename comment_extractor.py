@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 import pandas
 import pickle
+
 df = pandas.read_csv('data/reddit_wsb.csv')
 
 df = df.sort_values(by=['comms_num'], ascending=True)
@@ -30,7 +31,6 @@ reddit = praw.Reddit(
 )
 print(reddit.user.me())
 
-
 should_end = False
 start = time.time()
 # print(df['comms_num'].iloc[0])
@@ -40,12 +40,13 @@ ids = df['id'][:]
 
 top_level_only = False
 # comments = {"post_id": 0}
-comments = pickle.load(open("./pickle/comments_all.pkl", "rb"))
-current_id = comments["post_id"]
-j=0
+comments = pickle.load(open("./pickle/comments_all/comments_all.pkl", "rb"))
+current_id = 38000
+j = 0
 for i in ids:
     print(str(j) + '/' + str(len(ids)))
     if j < current_id:
+        j += 1
         continue
     submission = reddit.submission(i)
     submission.comment_sort = "old"
@@ -61,7 +62,7 @@ for i in ids:
     except:
         print("wina reddita")
 
-
-    comments["post_id"] = j
-    pickle.dump(comments, open( "./pickle/comments_all.pkl", "wb" ))
-    j+=1
+    if j % 100 == 0:
+        comments["post_id"] = j
+        pickle.dump(comments, open("./pickle/comments_all/comments_all_" + str(j) + ".pkl", "wb"))
+    j += 1
