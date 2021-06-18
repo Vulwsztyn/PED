@@ -41,7 +41,7 @@ ids = df['id'][:]
 top_level_only = False
 comments = {"post_id": 0}
 # comments = pickle.load(open("./pickle/comments_all/comments_all.pkl", "rb"))
-current_id = 38300
+current_id = 38201
 j = 0
 for i in ids:
     print(str(j) + '/' + str(len(ids)))
